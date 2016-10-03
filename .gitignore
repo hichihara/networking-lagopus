@@ -1,0 +1,27 @@
+*.py[cod]
+
+# Packages
+*.egg-info
+dist/
+
+# Unit test / coverage reports
+cover/
+.coverage
+.tox
+.testrepository
+.venv
+
+# Translations
+*.mo
+
+# Sphinx
+doc/build
+
+# pbr generates these
+AUTHORS
+ChangeLog
+
+# Editors
+*~
+.*.swp
+.*sw?
