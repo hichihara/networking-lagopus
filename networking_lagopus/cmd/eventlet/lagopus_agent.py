@@ -10,7 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from networking_lagopus.ml2.mech_driver.agent import lagopus_agent
+from networking_lagopus.ml2.agent import lagopus_agent
 
 def main():
     lagopus_agent.main()
