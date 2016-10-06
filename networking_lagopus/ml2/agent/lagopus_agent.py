@@ -32,6 +32,7 @@ LAGOPUS_AGENT_BINARY = 'neutron-lagopus-agent'
 AGENT_TYPE_LAGOPUS = 'Lagopus agent'
 EXTENSION_DRIVER_TYPE = 'lagopus'
 
+
 class LagopusManager(amb.CommonAgentManagerBase):
 
     def __init__(self):

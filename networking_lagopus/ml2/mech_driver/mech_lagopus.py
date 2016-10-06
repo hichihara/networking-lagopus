@@ -13,25 +13,47 @@
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 
+from neutron.extensions import portbindings
+from neutron.plugins.common import constants as p_constants
 from neutron.plugins.ml2.drivers import mech_agent
 
 LOG = logging.getLogger(__name__)
+AGENT_TYPE_LAGOPUS = 'Lagopus agent'
 
 
 class LagopusMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
 
     @log_helpers.log_method_call
     def __init__(self):
-        pass
-
-    def initialize(self):
-        pass
+        super(LagopusMechanismDriver, self).__init__(
+            AGENT_TYPE_LAGOPUS,
+            portbindings.VIF_TYPE_VHOST_USER,
+            {portbindings.CAP_PORT_FILTER: False})
 
     def get_allowed_network_types(self, agent=None):
-        pass
+        return [p_constants.TYPE_FLAT,p_constants.TYPE_LOCAL]
 
     def get_mappings(self, agent):
-        pass
+        return agent['configurations'].get('interface_mappings', {})
+
+    def try_to_bind_segment_for_agent(self, context, segment, agent):
+        if self.check_segment_for_agent(segment, agent):
+            # Default vif type
+            vif_type = self.vif_type
+
+            vif_details = dict(self.vif_details)
+
+            # TODO(hichihara): Implement whether vhost or tap
+
+            vif_details[portbindings.VHOST_USER_SOCKET] = '/tmp/sock0'
+            vif_details[portbindings.VHOST_USER_MODE] = \
+                portbindings.VHOST_USER_MODE_CLIENT
+            context.set_binding(segment[api.ID],
+                                vif_type,
+                                vif_details)
+            return True
+        else:
+            return False
 
     @log_helpers.log_method_call
     def create_network_precommit(self, context):
@@ -88,8 +110,4 @@ class LagopusMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
 
     def delete_port_postcommit(self, context):
         pass
-
-    def bind_port(self, context):
-        pass
-
     
