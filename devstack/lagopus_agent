@@ -35,7 +35,7 @@ function neutron_plugin_configure_plugin_agent {
 function neutron_plugin_setup_interface_driver {
     local conf_file=$1
     # TODO: Adds lagopus interface_driver
-    iniset $conf_file DEFAULT interface_driver openvswitch
+    iniset $conf_file DEFAULT interface_driver linuxbridge
 }
 
 
