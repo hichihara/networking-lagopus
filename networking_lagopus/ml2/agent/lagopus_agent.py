@@ -96,6 +96,13 @@ class LagopusRpcCallbacks(amb.CommonAgentManagerRpcCallBackBase):
         #   1.3 Added param devices_to_update to security_groups_provider_updated
         #   1.4 Added support for network_update
         target = oslo_messaging.Target(version='1.4')
+        def network_delete(self, context, **kwargs):
+            pass
+
+        def port_update(self, context, **kwargs):
+            LOG.debug("Port updated")
+            # Workaround
+            self.updated_devices.add("device_name")
 
         def security_groups_rule_updated(self, context, **kwargs):
             pass
