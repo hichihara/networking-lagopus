@@ -17,7 +17,6 @@ from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
 
-from neutron._i18n import _LE, _LI
 from neutron.agent.linux import ip_lib
 from neutron.agent.linux import utils
 from neutron.common import config as common_config
@@ -25,6 +24,8 @@ from neutron.common import profiler as setup_profiler
 from neutron.common import topics
 from neutron.plugins.ml2.drivers.agent import _agent_manager_base as amb
 from neutron.plugins.ml2.drivers.agent import _common_agent as ca
+
+from networking_lagopus._i18n import _LE, _LI
 
 LOG = logging.getLogger(__name__)
 
