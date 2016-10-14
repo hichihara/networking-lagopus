@@ -10,9 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import sys
 
+from neutron_lib import constants as n_const
 from oslo_config import cfg
+from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
@@ -26,18 +29,21 @@ from neutron.plugins.ml2.drivers.agent import _agent_manager_base as amb
 from neutron.plugins.ml2.drivers.agent import _common_agent as ca
 
 from networking_lagopus._i18n import _LE, _LI
+from networking_lagopus.agent import lagopus_lib
 
 LOG = logging.getLogger(__name__)
 
 LAGOPUS_AGENT_BINARY = 'neutron-lagopus-agent'
 AGENT_TYPE_LAGOPUS = 'Lagopus agent'
 EXTENSION_DRIVER_TYPE = 'lagopus'
+LAGOPUS_FS = "/sys/class/net/"
+RESOURCE_ID_LENGTH = 11
 
 
 class LagopusManager(amb.CommonAgentManagerBase):
 
     def __init__(self):
-        pass
+        self.interface_mappings = {}
 
     def ensure_port_admin_state(self, device, admin_state_up):
         pass
@@ -58,6 +64,10 @@ class LagopusManager(amb.CommonAgentManagerBase):
 
     def get_all_devices(self):
         devices = set()
+        all_device_names = os.listdir(LAGOPUS_FS)
+        for device_name in all_device_names:
+            if device_name.startswith(n_const.TAP_DEVICE_PREFIX):
+                devices.add(device_name)
         return devices
 
     def get_devices_modified_timestamps(self, devices):
@@ -76,8 +86,21 @@ class LagopusManager(amb.CommonAgentManagerBase):
                      [topics.SECURITY_GROUP, topics.UPDATE]]
         return consumers
         
-    def plug_interface(self, network_id, network_segment, device,
+    @staticmethod
+    def get_tap_device_name(interface_id):
+        tap_device_name = (n_const.TAP_DEVICE_PREFIX +
+                           interface_id[:RESOURCE_ID_LENGTH])
+        return tap_device_name
+
+    @log_helpers.log_method_call
+    def plug_interface(self, network_id, network_segment, tap_name,
                        device_owner):
+        port_num = len(self.interface_mappings) + 1
+        bridge_name = 'bridge01'
+        lagopus_client = lagopus_lib.LagopusCommand()
+        lagopus_client.plug_tap(tap_name, port_num, bridge_name)
+        lagopus_client.add_flow(port_num, bridge_name)
+        self.interface_mappings[tap_name] = port_num
         return True
 
     def setup_arp_spoofing_protection(self, device, device_details):
@@ -100,10 +123,12 @@ class LagopusRpcCallbacks(amb.CommonAgentManagerRpcCallBackBase):
         def network_delete(self, context, **kwargs):
             pass
 
+        @log_helpers.log_method_call
         def port_update(self, context, **kwargs):
-            LOG.debug("Port updated")
-            # Workaround
-            self.updated_devices.add("device_name")
+            port_id = kwargs['port']['id']
+            device_name = self.agent.mgr.get_tap_device_name(port_id)
+            self.updated_devices.add(device_name)
+            LOG.debug("port_update RPC received for port: %s", port_id)
 
         def security_groups_rule_updated(self, context, **kwargs):
             pass
