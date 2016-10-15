@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 
@@ -17,6 +18,8 @@ from neutron.extensions import portbindings
 from neutron.plugins.common import constants as p_constants
 from neutron.plugins.ml2 import driver_api as api
 from neutron.plugins.ml2.drivers import mech_agent
+
+from networking_lagopus.common import config # noqa
 
 LOG = logging.getLogger(__name__)
 AGENT_TYPE_LAGOPUS = 'Lagopus agent'
@@ -26,9 +29,14 @@ class LagopusMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
 
     @log_helpers.log_method_call
     def __init__(self):
+        if cfg.CONF.lagopus.vhost_mode:
+            # vif_type for vhostmode
+            vif_type = portbindings.VIF_TYPE_VHOST_USER
+        else:
+            # vif_type for tap
+            vif_type = portbindings.VIF_TYPE_BRIDGE
         super(LagopusMechanismDriver, self).__init__(
-            AGENT_TYPE_LAGOPUS,
-            portbindings.VIF_TYPE_VHOST_USER,
+            AGENT_TYPE_LAGOPUS, vif_type,
             {portbindings.CAP_PORT_FILTER: False})
 
     def get_allowed_network_types(self, agent=None):
@@ -44,11 +52,12 @@ class LagopusMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
 
             vif_details = dict(self.vif_details)
 
-            # TODO(hichihara): Implement whether vhost or tap
-
-            vif_details[portbindings.VHOST_USER_SOCKET] = '/tmp/sock0'
-            vif_details[portbindings.VHOST_USER_MODE] = \
-                portbindings.VHOST_USER_MODE_CLIENT
+            if cfg.CONF.lagopus.vhost_mode:
+                # Use vhostmode for virtual machines
+                # TODO(hichihara): Manage vhost socket
+                vif_details[portbindings.VHOST_USER_SOCKET] = '/tmp/sock0'
+                vif_details[portbindings.VHOST_USER_MODE] = \
+                    portbindings.VHOST_USER_MODE_CLIENT
             context.set_binding(segment[api.ID],
                                 vif_type,
                                 vif_details)
