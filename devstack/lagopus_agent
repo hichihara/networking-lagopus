@@ -16,6 +16,8 @@
 _XTRACE_NEUTRON_LAGOPUS=$(set +o | grep xtrace)
 set +o xtrace
 
+LAGOPUS_VHOST_MODE=${LAGOPUS_VHOST_MODE:-True}
+
 function neutron_plugin_create_nova_conf {
     :
 }
@@ -42,6 +44,10 @@ function neutron_plugin_configure_l3_agent {
 
 function neutron_plugin_configure_plugin_agent {
     AGENT_BINARY="neutron-lagopus-agent"
+
+    if [[ "$LAGOPUS_VHOST_MODE" == "False" ]]; then
+	iniset /$Q_PLUGIN_CONF_FILE lagopus vhost_mode "False"
+    fi
 }
 
 function neutron_plugin_setup_interface_driver {

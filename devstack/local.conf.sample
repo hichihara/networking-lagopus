@@ -12,9 +12,9 @@ LOGDAYS=1
 SCREEN_LOGDIR=$DEST/logs/screen
 
 ENABLED_SERVICES=key,rabbit,q-svc,q-agt,q-l3,q-dhcp,q-meta,mysql
+#ENABLED_SERVICES=key,n-api,n-cpu,n-cond,n-sch,n-novnc,n-cauth,g-api,g-reg,q-svc,q-agt,q-dhcp,q-l3,q-meta,rabbit,mysql
 
-#enable_plugin neutron git://git.openstack.org/openstack/neutron
-#enable_service q-qos
+enable_plugin networking-lagopus https://github.com/hichihara/networking-lagopus
 
 Q_ML2_PLUGIN_MECHANISM_DRIVERS=lagopus
 Q_ML2_TENANT_NETWORK_TYPE=local
@@ -23,6 +23,8 @@ Q_AGENT=lagopus
 #Q_ML2_PLUGIN_EXT_DRIVERS=""
 NEUTRON_CREATE_INITIAL_NETWORKS=False
 Q_USE_SECGROUP=False
+
+LAGOPUS_VHOST_MODE=False
 
 OFFLINE=True
 #RECLONE=True
