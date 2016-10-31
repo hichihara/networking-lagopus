@@ -43,6 +43,13 @@ RESOURCE_ID_LENGTH = 11
 class LagopusManager(amb.CommonAgentManagerBase):
 
     def __init__(self):
+        self.lagopus_client = lagopus_lib.LagopusCommand()
+        interfaces = self.lagopus_client.show_interfaces()
+        # TODO(hichihara): Manages no interface while lagopus is running
+        if not interfaces:
+            LOG.error(_LE("Lagopus isn't running"))
+            sys.exit(1)
+        self.num_interfaces = len(interfaces)
         self.interface_mappings = {}
 
     def ensure_port_admin_state(self, device, admin_state_up):
@@ -95,12 +102,12 @@ class LagopusManager(amb.CommonAgentManagerBase):
     @log_helpers.log_method_call
     def plug_interface(self, network_id, network_segment, tap_name,
                        device_owner):
-        port_num = len(self.interface_mappings) + 1
+        port_num = self.num_interfaces + 1
         bridge_name = 'bridge01'
-        lagopus_client = lagopus_lib.LagopusCommand()
-        lagopus_client.plug_tap(tap_name, port_num, bridge_name)
-        lagopus_client.add_flow(port_num, bridge_name)
+        self.lagopus_client.plug_tap(tap_name, port_num, bridge_name)
+        self.lagopus_client.add_flow(port_num, bridge_name)
         self.interface_mappings[tap_name] = port_num
+        self.num_interfaces += 1
         return True
 
     def setup_arp_spoofing_protection(self, device, device_details):

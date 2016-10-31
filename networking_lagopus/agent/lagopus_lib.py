@@ -18,12 +18,16 @@ from neutron.agent.linux import utils
 
 from networking_lagopus.agent import lagosh
 
+SOCKET_ISSUE = "Socket connection refused.  Lagopus is not running?\n"
+
 
 class LagopusCommand(object):
 
-    def show_interfaces(cls, **kwargs):
+    def show_interfaces(self):
         cmd = ['lagosh', '-c', 'show', 'interface']
-        result = utils.execute(cmd, **kwargs)
+        result = utils.execute(cmd)
+        if result == SOCKET_ISSUE:
+            return
         decode_result = json.loads(result)
         return decode_result
 
@@ -39,11 +43,11 @@ class LagopusCommand(object):
             pass
 
     def plug_tap(self, tap_name, port_num, bridge_name='bridge01'):
-        cmd = ("interface interface%(num)s create -type ethernet-rawsock "
+        cmd = ("interface %(tap)s create -type ethernet-rawsock "
                "-device %(tap)s\n") % {'num': port_num, 'tap': tap_name}
         self._lagosh(cmd)
         cmd = ("port port%(num)s create -interface "
-               "interface%(num)s\n") % {'num': port_num}
+               "%(tap)s\n") % {'num': port_num, 'tap': tap_name}
         self._lagosh(cmd)
         cmd = ("bridge %(bridge_name)s config -port port%(num)s "
                "%(num)s\n") % {'bridge_name': bridge_name, 'num': port_num}
