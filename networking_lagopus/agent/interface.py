@@ -14,6 +14,7 @@ from oslo_log import log as logging
 
 from neutron.agent.linux import interface as n_interface
 from neutron.agent.linux import ip_lib
+from neutron.agent.linux import utils
 from neutron.common import constants as n_const
 
 from networking_lagopus._i18n import _LE, _LW
@@ -22,6 +23,11 @@ LOG = logging.getLogger(__name__)
 
 
 class LagopusInterfaceDriver(n_interface.LinuxInterfaceDriver):
+
+    def _disable_tcp_offload(self, namespace, device_name):
+        ip_wrapper = ip_lib.IPWrapper(namespace)
+        cmd = ['ethtool', '-K', device_name, 'tx', 'off', 'tso', 'off']
+        ip_wrapper.netns.execute(cmd)
 
     def plug_new(self, network_id, port_id, device_name, mac_address,
                  bridge=None, namespace=None, prefix=None, mtu=None):
@@ -42,7 +48,7 @@ class LagopusInterfaceDriver(n_interface.LinuxInterfaceDriver):
 
         root_veth.link.set_up()
         ns_veth.link.set_up()
-
+        self._disable_tcp_offload(namespace, device_name)
 
     def unplug(self, device_name, bridge=None, namespace=None, prefix=None):
         """Unplug the interface."""
