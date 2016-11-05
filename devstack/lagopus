@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -14,28 +16,26 @@
 _XTRACE_NEUTRON_LAGOPUS=$(set +o | grep xtrace)
 set +o xtrace
 
-dir=${GITDIR['networking-lagopus']}
+function install_lagopus {
+    local dir=${GITDIR['networking-lagopus']}
+    
+    git_clone $LAGOPUS_REPO $LAGOPUS_DIR $LAGOPUS_BRANCH
+    cd $LAGOPUS_DIR
+    ./configure --disable-dpdk
+    make
+    sudo make install
+    sudo mkdir -p $LAGOPUS_CONF_DIR
+    sudo cp $dir/devstack/$LAGOPUS_CONF $LAGOPUS_CONF_DIR/
+    sudo sed -i -e "s/br-eth/$LAGOPUS_PHYSICAL_INTERFACE/g" $LAGOPUS_CONF_DIR/$LAGOPUS_CONF
+}
 
-source $dir/devstack/settings
-source $dir/devstack/lagopus_agent
-source $dir/devstack/lagopus
+function run_lagopus {
+    sudo lagopus -C $LAGOPUS_CONF_DIR/$LAGOPUS_CONF -l $LAGOPUS_LOG
+}
 
-if is_service_enabled q-svc; then
-    if [[ "$1" == "stack" && "$2" == "install" ]]; then
-	if [[ "$LAGOPUS_INSTALL" == "True" ]]; then
-	    install_lagopus
-	fi
-    elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
-	if [[ "$LAGOPUS_INSTALL" == "True" || "$LAGOPUS_RUN" == "True" ]]; then
-	    run_lagopus
-	fi
-	_neutron_deploy_rootwrap_filters $dir
-    elif [[ "$1" == "unstack" ]]; then
-	if [[ "$LAGOPUS_INSTALL" == "True" || "$LAGOPUS_RUN" == "True" ]]; then
-	    stop_lagopus
-	fi
-    fi
-fi
+function stop_lagopus {
+    sudo pkill -9 -f "lagopus -C $LAGOPUS_CONF_DIR/$LAGOPUS_CONF -l $LAGOPUS_LOG"
+}
 
 # Restore xtrace
 $_XTRACE_NEUTRON_LAGOPUS
