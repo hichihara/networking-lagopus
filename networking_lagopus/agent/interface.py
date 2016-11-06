@@ -18,6 +18,7 @@ from neutron.agent.linux import utils
 from neutron.common import constants as n_const
 
 from networking_lagopus._i18n import _LE, _LW
+from networking_lagopus.agent import lagopus_lib
 
 LOG = logging.getLogger(__name__)
 
@@ -53,9 +54,14 @@ class LagopusInterfaceDriver(n_interface.LinuxInterfaceDriver):
     def unplug(self, device_name, bridge=None, namespace=None, prefix=None):
         """Unplug the interface."""
         device = ip_lib.IPDevice(device_name, namespace=namespace)
+        tap_name = device_name.replace(prefix or self.DEV_NAME_PREFIX,
+                                       n_const.TAP_DEVICE_PREFIX)
+        lagopus_client = lagopus_lib.LagopusCommand()
+        bridge_name = 'bridge01'
         try:
+            lagopus_client.del_flow(bridge_name=bridge_name, tap_name=tap_name)
+            lagopus_client.unplug_tap(tap_name, bridge_name)
             device.link.delete()
-            # TODO(hichihara): Delete flow and eth in Lagopus swith
             LOG.debug("Unplugged interface '%s'", device_name)
         except RuntimeError:
             LOG.error(_LE("Failed unplugging interface '%s'"),
