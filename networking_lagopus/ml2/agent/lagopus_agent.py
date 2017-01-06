@@ -14,6 +14,7 @@ import os
 import sys
 
 from neutron_lib import constants as n_const
+from neutron_lib.utils import helpers
 from oslo_config import cfg
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
@@ -30,6 +31,7 @@ from neutron.plugins.ml2.drivers.agent import _common_agent as ca
 
 from networking_lagopus._i18n import _LE, _LI
 from networking_lagopus.agent import lagopus_lib
+from networking_lagopus.common import config # noqa
 
 LOG = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ RESOURCE_ID_LENGTH = 11
 
 class LagopusManager(amb.CommonAgentManagerBase):
 
-    def __init__(self):
+    def __init__(self, interface_mappings):
         self.lagopus_client = lagopus_lib.LagopusCommand()
         interfaces = self.lagopus_client.show_interfaces()
         # TODO(hichihara): Manages no interface while lagopus is running
@@ -50,14 +52,13 @@ class LagopusManager(amb.CommonAgentManagerBase):
             LOG.error(_LE("Lagopus isn't running"))
             sys.exit(1)
         self.num_interfaces = len(interfaces)
-        self.interface_mappings = {}
+        self.interface_mappings = interface_mappings
 
     def ensure_port_admin_state(self, device, admin_state_up):
         pass
 
     def get_agent_configurations(self):
-        configurations = {}
-        return configurations
+        return {'interface_mappings': self.interface_mappings}
 
     def get_agent_id(self):
         devices = ip_lib.IPWrapper().get_devices(True)
@@ -147,11 +148,23 @@ class LagopusRpcCallbacks(amb.CommonAgentManagerRpcCallBackBase):
             pass
 
 
+def parse_interface_mappings():
+    try:
+        interface_mappings = helpers.parse_mappings(
+            cfg.CONF.lagopus.physical_interface_mappings)
+        LOG.info(_LI("Interface mappings: %s"), interface_mappings)
+        return interface_mappings
+    except ValueError as e:
+        LOG.error(_LE("Parsing physical_interface_mappings failed: %s. "
+                      "Agent terminated!"), e)
+        sys.exit(1)
+
 def main():
     common_config.init(sys.argv[1:])
     common_config.setup_logging()
+    interface_mappings = parse_interface_mappings()
 
-    manager = LagopusManager()
+    manager = LagopusManager(interface_mappings)
 
     polling_interval = cfg.CONF.AGENT.polling_interval
     quitting_rpc_timeout = cfg.CONF.AGENT.quitting_rpc_timeout

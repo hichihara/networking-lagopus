@@ -14,9 +14,21 @@ from oslo_config import cfg
 
 from networking_lagopus._i18n import _
 
+DEFAULT_INTERFACE_MAPPINGS = []
+
 lagopus_opts = [
     cfg.BoolOpt('vhost_mode', default=True,
                 help=_("Boot virtual machines with vhost_mode ")),
+    cfg.ListOpt('physical_interface_mappings',
+                default=DEFAULT_INTERFACE_MAPPINGS,
+                help=_("Comma-separated list of "
+                       "<physical_network>:<physical_interface> tuples "
+                       "mapping physical network names to the agent's "
+                       "node-specific physical network interfaces to be used "
+                       "for flat and VLAN networks. All physical networks "
+                       "listed in network_vlan_ranges on the server should "
+                       "have mappings to appropriate interfaces on each "
+                       "agent.")),
 ]
 
 
