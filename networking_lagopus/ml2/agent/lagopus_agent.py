@@ -53,6 +53,7 @@ class LagopusManager(amb.CommonAgentManagerBase):
             sys.exit(1)
         self.num_interfaces = len(interfaces)
         self.interface_mappings = interface_mappings
+        self.port_mappings = {}
 
     def ensure_port_admin_state(self, device, admin_state_up):
         pass
@@ -107,7 +108,7 @@ class LagopusManager(amb.CommonAgentManagerBase):
         bridge_name = 'bridge01'
         self.lagopus_client.plug_tap(tap_name, port_num, bridge_name)
         self.lagopus_client.add_flow(port_num, bridge_name)
-        self.interface_mappings[tap_name] = port_num
+        self.port_mappings[tap_name] = port_num
         self.num_interfaces += 1
         return True
 
