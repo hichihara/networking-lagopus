@@ -48,10 +48,14 @@ function neutron_plugin_configure_plugin_agent {
     setup_package $dir
 
     if [[ "$LAGOPUS_VHOST_MODE" == "False" ]]; then
-	iniset /$Q_PLUGIN_CONF_FILE lagopus vhost_mode "False"
+        iniset /$Q_PLUGIN_CONF_FILE lagopus vhost_mode "False"
     fi
     if [[ "$LAGOPUS_INTERFACE_MAPPINGS" == "" ]]; then
-	LAGOPUS_INTERFACE_MAPPINGS=$PHYSICAL_NETWORK:$LAGOPUS_PHYSICAL_INTERFACE
+        if [[ "$LAGOPUS_VHOST_MODE" == "False" ]]; then
+            LAGOPUS_INTERFACE_MAPPINGS=$PHYSICAL_NETWORK:$LAGOPUS_PHYSICAL_INTERFACE
+        else
+            LAGOPUS_INTERFACE_MAPPINGS=$PHYSICAL_NETWORK:dpdk
+        fi
     fi
     iniset /$Q_PLUGIN_CONF_FILE lagopus physical_interface_mappings $LAGOPUS_INTERFACE_MAPPINGS
 }
