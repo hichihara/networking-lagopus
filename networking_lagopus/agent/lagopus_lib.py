@@ -39,11 +39,11 @@ class LagopusCommand(object):
         return self._lagosh(cmd)
 
     def plug_tap(self, tap_name, port_num, bridge_name='bridge01'):
-        cmd = ("interface %(tap)s create -type ethernet-rawsock "
+        cmd = ("interface %(tap)si create -type ethernet-rawsock "
                "-device %(tap)s\n") % {'tap': tap_name}
         self._lagosh(cmd)
         cmd = ("port p-%(tap)s create -interface "
-               "%(tap)s\n") % {'tap': tap_name}
+               "%(tap)si\n") % {'tap': tap_name}
         self._lagosh(cmd)
         cmd = ("bridge %(bridge_name)s config -port p-%(tap)s "
                "%(num)s\n") % {'bridge_name': bridge_name,
@@ -58,7 +58,7 @@ class LagopusCommand(object):
         self._lagosh(cmd)
         cmd = ("port p-%(tap)s destroy\n") % {'tap': tap_name}
         self._lagosh(cmd)
-        cmd = ("interface %(tap)s destroy\n") % {'tap': tap_name}
+        cmd = ("interface %(tap)si destroy\n") % {'tap': tap_name}
         self._lagosh(cmd)
 
     def add_flow(self, port_num, bridge_name='bridge01'):
