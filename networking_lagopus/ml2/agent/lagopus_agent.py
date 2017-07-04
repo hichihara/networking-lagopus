@@ -64,7 +64,7 @@ class LagopusManager(amb.CommonAgentManagerBase):
     def get_agent_id(self):
         devices = ip_lib.IPWrapper().get_devices(True)
         if devices:
-            mac = utils.get_interface_mac(devices[0].name)
+            mac = ip_lib.get_device_mac(devices[0].name)
             return 'lagopus%s' % mac.replace(":", "")
         else:
             LOG.error(_LE("Unable to obtain MAC address for unique ID. "

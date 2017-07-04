@@ -41,7 +41,7 @@ function neutron_plugin_configure_l3_agent {
 }
 
 function neutron_plugin_configure_plugin_agent {
-    AGENT_BINARY="neutron-lagopus-agent"
+    AGENT_BINARY="$NEUTRON_BIN_DIR/neutron-lagopus-agent"
 
     # Install networking-lagopus
     dir=${GITDIR['networking-lagopus']}

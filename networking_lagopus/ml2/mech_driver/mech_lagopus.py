@@ -10,11 +10,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutron_lib.api.definitions import portbindings
 from oslo_config import cfg
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 
-from neutron.extensions import portbindings
 from neutron.plugins.common import constants as p_constants
 from neutron.plugins.ml2 import driver_api as api
 from neutron.plugins.ml2.drivers import mech_agent
